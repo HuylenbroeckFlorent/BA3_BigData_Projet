@@ -1,14 +1,23 @@
 
 
 #age p-value=0.053
+summary(lm(y~age,data=Dtrain))
+
 #age+I(age^2) p-value <2.2e-16
 summary(lm(y~age+I(age^2),data=Dtrain))
+crossvalid(finalset,c("age","I(age^2)"))
 
-crossvalid(Dtrain,c("age","I(age^2)"))
+
+plot(age,y,pch=16,main="Regression non linéaire de y en fonction de age+age^2+age^3+age^4+age^5")
+coeff=coefficients(lm(y~age+I(age^2)+I(age^3)+I(age^4)+I(age^5),data=Dtrain))
+curve(coeff[1]+coeff[2]*x+coeff[3]*x^2+coeff[4]*x^3+coeff[5]*x^4+coeff[6]*x^5,add=TRUE)
+
+summary(lm(y~age+I(age^2)+I(age^3)+I(age^4)+I(age^5),data=Dtrain))
+crossvalid(finalset,c("age","I(age^2)","I(age^3)","I(age^4)","I(age^5)"))
 
 #job (bcp de job >0.05 p value)
 summary(lm(y~job,data=Dtrain))
-crossvalid(Dtrain,"job")
+
 #marital (married et unknown >0.05)
 summary(lm(y~marital,data=Dtrain))
 crossvalid(Dtrain,"marital")
@@ -38,6 +47,9 @@ summary(lm(y~poutcome,data=Dtrain))
 
 #campaign
 summary(lm(y~campaign,data=Dtrain))
+
+#contact
+summary(lm(y~contact,data=Dtrain))
 
 #previous
 summary(lm(y~previous,data=Dtrain))
@@ -75,9 +87,6 @@ summary(lm(y~contact,data=finalset))
 
 crossvalid(finalset,"contact")
 
-
-
-
 #married dummies
 marriedv=Dtrain[,"marital"]
 married <- as.numeric(marriedv=="married")
@@ -89,13 +98,6 @@ summary(lm(y~married,data=finalset))
 
 crossvalid(finalset,"married")
 
-#married+contact
-
-finalset=data.frame(cbind(contact,married,y))
-summary(lm(y~contact+married,data=finalset))
-
-crossvalid(finalset,c("contact","married"))
-
 #student dummies
 studentv=Dtrain[,"job"]
 student=as.numeric(studentv=="student")
@@ -103,6 +105,22 @@ y=Dtrain[,"y"]
 finalset=data.frame(cbind(student,y))
 summary(lm(y~student,data=finalset))
 crossvalid(finalset,c("student"))
+
+#housemaid dummies
+housemaidv=Dtrain[,"job"]
+housemaid=as.numeric(housemaidv=="housemaid")
+y=Dtrain[,"y"]
+finalset=data.frame(cbind(housemaid,y))
+summary(lm(y~housemaid,data=finalset))
+
+#services dummies
+servicesv=Dtrain[,"job"]
+services=as.numeric(servicesv=="services")
+y=Dtrain[,"y"]
+finalset=data.frame(cbind(services,y))
+summary(lm(y~services,data=finalset))
+
+
 
 #retired dummies
 retiredv=Dtrain[,"job"]
@@ -273,6 +291,58 @@ summary(lm(y~tue,data=finalset))
 crossvalid(finalset,c("tue"))
 
 
+#backward
+
+finalset=data.frame(cbind(ndefault,hc,prof,bc,married,retired,student,failure,success,single,uni,job,age,marital,default,housing,loan,contact,month,dow,campaign,pdays,previous,poutcome,edu,y))
+test.lm=lm(y~marital+default+contact+campaign+pdays,data=finalset)
+
+bestpred=backward(c("ndefault","hc","prof","bc","married","retired","student","failure","success","single","uni","job","age","marital","default","housing","loan","contact","month","dow","campaign","pdays","previous","poutcome","edu"),finalset)
+
+
+
+crossvalid(finalset,bestpred)
+summary(test.lm)
+
+backward <- function(predictors,set){
+  currentPred=predictors
+  for(i in 1:length(predictors)){
+    cross=crossvalid(finalset,currentPred)
+    idtodel=0
+    for(j in 1:length(currentPred)){
+      currentcross=0
+      for(h in 1:5){
+        currentcross=currentcross+crossvalid(finalset,currentPred[-j])
+      }
+      currentcross=currentcross/5
+      if(currentcross<cross){
+        idtodel=j
+        cross=currentcross
+      }
+    }
+    if(idtodel==0){
+      return(currentPred)
+    }
+    else{
+      currentPred <- currentPred[-idtodel]
+    }
+  }
+  
+}
+
+
+
+#age+married
+summary(lm(y~campaign+age+I(age^2)+pdays+ndefault+uni+retired+student+contact,data=finalset))
+
+finalset=data.frame(cbind(age,campaign,single,ndefault,married,contact,uni,pdays,retired,student,y))
+crossvalid(finalset,c("ndefault","pdays","contact","uni","married","retired","student","age","I(age^2)"))
+#married+contact
+
+finalset=data.frame(cbind(contact,married,y))
+summary(lm(y~contact+married,data=finalset))
+
+crossvalid(finalset,c("contact","married"))
+
 #student+married
 finalset=data.frame(cbind(student,married,y))
 summary(lm(y~student+married,data=finalset))
@@ -335,10 +405,10 @@ crossvalid(finalset,c("campaign","student","uni","success","retired","contact","
 age=Dtrain[,"age"]
 campaign=Dtrain[,"campaign"]
 pdays=Dtrain[,"pdays"]
-finalset=data.frame(cbind(single,pdays,uni,student,campaign,retired,contact,age,y))
+finalset=data.frame(cbind(success,campaign,ndefault,pdays,uni,student,retired,contact,age,y))
 
-summary(lm(y~campaign+student+contact+uni+pdays+retired+age+I(age^2),data=finalset))
-crossvalid(finalset,c("campaign","student","uni","pdays","retired","contact","age","I(age^2)"))
+summary(lm(y~ndefault+student+contact+uni+pdays+retired+age+I(age^2),data=finalset))
+crossvalid(finalset,c("student*contact","ndefault","student","uni","pdays","retired","contact","age","I(age^2)"))
 
 
 #uni+student+retired+contact+age+age(^2)+campaign+pdays+october
@@ -397,8 +467,8 @@ crossvalid(finalset,c("mar","apr","age","I(age^2)"))
 age=Dtrain[,"age"]
 finalset=data.frame(cbind(success,failure,uni,previous,campaign,student,retired,contact,age,y))
 
-summary(lm(y~student+contact+uni+success+retired+age+I(age^5),data=finalset))
-crossvalid(finalset,c("student","uni","I(campaign^3)","success","retired","contact","age","I(age^5)"))
+summary(lm(y~student+contact+uni+success+retired+campaign+I(campaign^2)+I(campaign^3)+age+I(age^2)+I(age^3)+I(age^4)+I(age^5),data=finalset))
+crossvalid(finalset,c("student","uni","I(campaign)","I(campaign^2)","I(campaign^3)","success","retired","contact","age","I(age^2)","I(age^3)","I(age^4)","I(age^5)"))
 
 #uni+success+student+retired+contact+age+age(^2)+may+april
 age=Dtrain[,"age"]
@@ -413,7 +483,7 @@ test.lm=lm(y~student+contact+uni+retired+age+apr+may+I(age^2),data=finalset)
 #uni+married+student+retired+contact+age+age(^2)+ndefault+pdays
 age=Dtrain[,"age"]
 previous=Dtrain[,"previous"]
-finalset=data.frame(cbind(pdays,admin,single,ndefault,uni,student,retired,contact,age,y))
+finalset=data.frame(cbind(pdays,poutcome,ndefault,uni,student,retired,contact,age,y))
 
 summary(lm(y~student+contact+pdays+ndefault+uni+retired+age+I(age^2),data=finalset))
 crossvalid(finalset,c("ndefault","student","pdays","uni","retired","contact","age","I(age^2)"))
@@ -444,12 +514,30 @@ finalset2=data.frame(cbind(pdays2,single2,ndefault2,uni2,student2,retired2,conta
 summary(lm(y2~student2+contact2+I(pdays2^2)+ndefault2+uni2+retired2+age2+I(age2^2),data=finalset2))
 crossvalid(finalset2,c("ndefault2","student2","pdays2","uni2","retired2","contact2","age2","I(age2^2)"))
 
-#uni+married+student+retired+contact+age+age(^5)+ndefault+pdays à tester
+#uni+student+retired+contact+age+age(^5)+ndefault+pdays 
 
-finalset=data.frame(cbind(pdays,admin,single,ndefault,uni,student,retired,contact,age,y))
+finalset=data.frame(cbind(month,pdays,admin,single,ndefault,uni,student,retired,contact,age,y))
 
-summary(lm(y~student+contact+pdays+ndefault+uni+retired+age+I(age^5),data=finalset))
-crossvalid(finalset,c("ndefault","student","pdays","uni","retired","contact","age","I(age^5)"))
+summary(lm(y~month+student+contact+pdays+ndefault+uni+retired+age+I(age^2)+I(age^3)+I(age^4)+I(age^5),data=finalset))
+crossvalid(finalset,c("month","ndefault","student","pdays","uni","retired","contact","age","I(age^2)","I(age^3)","I(age^4)","I(age^5)"))
+
+#
+job=Dtrain[,"job"]
+housing=Dtrain[,"housing"]
+loan=Dtrain[,"loan"]
+default=Dtrain[,"default"]
+marital=Dtrain[,"marital"]
+month=Dtrain[,"month"]
+dow=Dtrain[,"day_of_week"]
+edu=Dtrain[,"edu"]
+poutcome=Dtrain[,"poutcome"]
+finalset=data.frame(cbind(month,default,failure,poutcome,housing,loan,marital,job,edu,married,month,uni,pdays,ndefault,student,retired,contact,age,y))
+
+summary(lm(y~ndefault+uni+student+poutcome+retired+month+I(month^2)+contact+pdays+age+I(age^2),data=finalset))
+crossvalid(finalset,c("month","ndefault","poutcome","student","retired","uni","age","I(age^2)","pdays","contact"))
+
+
+
 
 
 
@@ -487,11 +575,7 @@ crossvalid <- function (set,predictor){
     currentSum=0
     for(i in 1:nrow(testData)){
       currentSum=currentSum+(testData[i,"y"]*log(prediction[i],base=exp(1))+((1-testData[i,"y"])*log(1-prediction[i],base=exp(1))))
-      if(is.nan(currentSum)){
-        print(testData[i,"y"])
-        print(prediction[i])
-        Sys.sleep(100)
-      }
+      
     }
     
     currenterr=-(1/nrow(testData))*currentSum        
@@ -669,6 +753,39 @@ proba=predict(test.lm,finalTestSet,type="response")
 
 
 
+#test uni+married+student+retired+contact+age+age(^5)+ndefault+pdays 0.54359
+
+finalset=data.frame(cbind(pdays,single,ndefault,uni,student,retired,contact,age,y))
+
+test.lm=lm(y~student+contact+uni+retired+age+I(age^5)+pdays+ndefault,data=finalset)
+
+finalTestSet=data.frame(cbind(student=studentT,retired=retiredT,uni=uniT,contact=contactT,age=ageT,pdays=pdaysT,ndefault=ndefaultT))
+
+proba=predict(test.lm,finalTestSet,type="response")
+
+
+#test uni+student+retired+contact+age+age^2+age^3+age^4+age(^5)+ndefault+pdays 0.548
+
+finalset=data.frame(cbind(pdays,single,ndefault,uni,student,retired,contact,age,y))
+
+test.lm=lm(y~student+contact+uni+retired+age+I(age^2)+I(age^3)+I(age^4)+I(age^5)+pdays+ndefault,data=finalset)
+
+finalTestSet=data.frame(cbind(student=studentT,retired=retiredT,uni=uniT,contact=contactT,age=ageT,pdays=pdaysT,ndefault=ndefaultT))
+
+proba=predict(test.lm,finalTestSet,type="response")
+
+
+#test avec month et poutcome 0.56...
+
+monthT=Xtest[,"month"]
+poutcomeT=Xtest[,"poutcome"]
+
+finalTestSet=data.frame(cbind(poutcome=poutcomeT,month=monthT,student=studentT,retired=retiredT,uni=uniT,contact=contactT,age=ageT,pdays=pdaysT,ndefault=ndefaultT))
+
+test.lm=lm(y~ndefault+uni+student+poutcome+retired+month+I(month^2)+contact+pdays+age+I(age^2),data=finalset)
+
+
+proba=predict(test.lm,finalTestSet,type="response")
 
 
 
