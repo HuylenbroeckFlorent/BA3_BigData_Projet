@@ -23,15 +23,15 @@
 	\newpage
 	
 	\section{Introduction}
-	Dans le cadre du cours de Big data analytics, nous avons été amenés à faire un projet, ce projet constite en une compétition. Celle-ci consiste à déterminer, sur base d'un jeu de donnée décrivant certaines caractèristiques de plusieurs personnes, la probabilité qu'une personne place de l'argent dans une banque. Le but étant de minimiser l'erreur de prédiction sur l'ensemble des personnes. Le jeu de donnnées mis a notre disposition nous donne plusieurs informations sur chaque personne : l'âge, le métier, le statut, la présence d'un crédit, prêt de maison, prêt personnel. Il nous donne aussi plusieurs informations sur le dernier contact avec le client pour cette campagne : le type de communiversityversitycation, le mois, le jour, le nombre de contact(s) pendant la campagne, le nombre de jour(s) depuis le dernier contact, le nombre de contact(s) pendant les campagnes précédentes, le résultat de la dernière campagne. Le jeu de données sur lequel ont doit s'entrainer nous donne aussi le résultat c'est à dire si le client a mis de l'argent à terme dans la banque ou non, il faut prédire cette probabilité sur le 2e jeu de données qui lui nous fournit les mêmes informations mais pas le résultat. 
+	Dans le cadre du cours de Big data analytics, nous avons été amenés à faire un projet, ce projet consiste en une compétition. Celle-ci a pour but à déterminer, sur base d'un jeu de données décrivant certaines caractéristiques de plusieurs personnes, la probabilité qu'une personne place de l'argent dans une banque. Le but étant de minimiser l'erreur de prédiction sur l'ensemble des personnes. Le jeu de données mis à notre disposition nous donne plusieurs informations sur chaque personne : l'âge, le métier, le statut, la présence d'un crédit, prêt de maison, prêt personnel,... Il nous donne aussi plusieurs informations sur le dernier contact avec le client pour cette campagne : le type de communication, le mois, le jour, le nombre de contacts pendant la campagne, le nombre de jours depuis le dernier contact, le nombre de contacts pendant les campagnes précédentes, le résultat de la dernière campagne. Le jeu de données sur lequel on doit s'entrainer nous donne aussi le résultat c'est-à-dire si le client a mis de l'argent à terme dans la banque ou non. Il faut prédire cette probabilité sur le deuxième jeu de données qui, lui, nous fournit les mêmes informations mais pas le résultat. 
 	
-	\section{Methodologie}
+	\section{Méthodologie}
 	
 	Plusieurs méthodes ont été utilisées pour arriver à déterminer au mieux la probabilité tout en minimisant l'erreur de prédiction. 
 	\subsection{Régression linéaire simple}
-	La première technique utilisée a été la regression linéaire. En effet, cette méthode fait sens car le but est de prédire une probabilité dans [0,1], la regréssion linéaire est justement utile pour prédire une réponse sur un ensemble continu. 
-	La première approche dans la régression linéaire a été de tester les prédicteurs un par un, donc la droite de régression de chaque prédicteur par rapport à y(le résultat) a été déterminée. La fonction lm() de R nous permet justement de faire cette regréssion, la fonction summary() donne des informations importantes sur cette régression, entre autres la p-valeur qui donne une bonne indication sur l'utilité de la droite de régression, en effet, cette valeur donne la probabilité qu'un point des données se trouve plus loin qu'une certaine distance t de la droite. Plus cette valeur est petite, plus la probabilité qu'un point soit loin de le droite est petite aussi, ainsi, si on doit prédire le y d'une nouvelle donnée x, il y a grande chance pour que ce y soit situé proche de la droite de regression en x. 
-	Certains des prédicteurs comme le métier par exemple ont été transformés en variables "dummy". Une variable "dummy" n'est autre qu'une variable qui vaut 1 si la personne est un étudiant(par exemple) et 0 si elle ne l'est pas. Cette transformation a été faites dans le but de pouvoir extraire par exemple un métier en particulier (exemple "student"). Ainsi, on se retrouve avec beaucoup plus de prédicteurs qu'auparavant, en effet, le prédicteur métier comprend 12 métiers différents et donc 12 variables "dummy" associées.
+	La première technique utilisée a été la régression linéaire. En effet, cette méthode fait sens car le but est de prédire une probabilité dans $[0,1]$, la régression linéaire est justement utile pour prédire une réponse sur un ensemble continu. 
+	La première approche dans la régression linéaire a été de tester les prédicteurs un à un, donc la droite de régression de chaque prédicteur par rapport à \emph{y(le résultat)} a été déterminée. La fonction \emph{lm()} de $R$ nous permet justement de faire cette régression, la fonction \emph{summary()} donne des informations importantes sur celle-ci, entre autre la \emph{p-valeur} qui donne une bonne indication sur l'utilité de la droite de régression. En effet, cette valeur donne la probabilité qu'un point des données se trouve plus loin qu'une certaine distance $t$ de la droite. Plus cette valeur est petite, plus la probabilité qu'un point soit loin de la droite est petite aussi. Ainsi, si on doit prédire le $y$ d'une nouvelle donnée $x$, il y a grande chance pour que ce $y$ soit situé proche de la droite de régression en $x$. 
+	Certains des prédicteurs, comme par exemple le métier, ont été transformés en variables "\emph{dummy}". Une variable "\emph{dummy}" n'est autre qu'une variable qui vaut 1 si la personne est un étudiant (par exemple) et 0 si elle ne l'est pas. Cette transformation a été faite dans le but de pouvoir extraire, par exemple, un métier en particulier (exemple "student"). Ainsi, on se retrouve avec beaucoup plus de prédicteurs qu'auparavant. En effet, le prédicteur métier comprend 12 métiers différents et donc 12 variables "dummy" associées.
 	On a ainsi pu dégager les meilleurs prédicteurs: 
 	\begin{center}
   	 	\begin{tabular}{| c | c |}
@@ -69,11 +69,11 @@
   	 	\end{tabular}
   	\end{center}
 	\subsection{Cross-validation}
-	Pour tester l'efficacité de nos choix des modèles, une fonction de cross-validation a été faite. Elle découpe le jeu de données "Dtrain" en 10 parties, va s'entrainer sur 9 parties et va estimer l'erreur sur la 10e partie, elle va répéter cette opération 10 fois (en prenant une partie qui n'a pas encore été prise pour tester l'erreur). Ensuite la fonction va renvoyer la moyenne des erreurs. L'erreur qui est calculée à chaque fois est le "LogLoss": 
-	\\ $LogLoss=-\frac{1}{n}\sum_{i=1}^{n}[y_iln(\widehat{p_i})+(1-y_i)ln(1-\widehat{p_i})]$, 
-	\\où $n$ est le nombre de données dans la partie de test, $\widehat{p_i}$ est la probabilité trouvé pour l'observation i de la partie de test et $y_i$ est la valeur du résultat de l'observation i de la partie de test. Cette erreur est celle avec laquelle notre modèle sera évalué par Kaggle. 
+	Pour tester l'efficacité de nos choix de modèle, une fonction de cross-validation a été faite. Elle découpe le jeu de données "\emph{Dtrain}" en 10 parties, va s'entrainer sur 9 d'entre elles et va estimer l'erreur sur la dixième. Elle va répéter cette opération 10 fois (en prenant une partie qui n'a pas encore été prise pour tester l'erreur). Ensuite, la fonction va renvoyer la moyenne des erreurs. L'erreur qui est calculée à chaque fois est le \emph{LogLoss}: 
+	\\$LogLoss=-\frac{1}{n}\sum_{i=1}^{n}[y_iln(\widehat{p_i})+(1-y_i)ln(1-\widehat{p_i})]$, 
+	\\où $n$ est le nombre de données dans la partie de test, $\widehat{p_i}$ est la probabilité trouvée pour l'observation $i$ de la partie de test et $y_i$ est la valeur du résultat de l'observation $i$ de la partie de test. Cette erreur est celle avec laquelle notre modèle sera évalué par Kaggle. 
 	\subsection{Régression linéaire multiple}
-	Pour obtenir de meilleurs résultats que la régression linéaire, on a ensuite essayé d'associer plusieurs prédicteurs pour encore réduire l'erreur de prédiction. Pour ce faire, on a commencer par choisir 2 prédicteurs ayant une p-valeur inférieure à 0,05 et on a fait la régression multiple de y en fonction de ces 2 valeurs. Encore une fois R nous permet de voir les p-valeur de chaque prédicteur dans la regression liénaire multiple. On a ainsi essayé d'associer 2,3,4,... prédicteurs en essayant d'obtenir une régression linéaire multiple avec des p-valeurs inférieures à 0,05. Si la p-valeur d'un prédicteur était supérieure à 0,05 dans la régression, celui-ci était enlevé et remplacé ou non par un autre. On a aussi utilisé notre sens logique et notre intuition pour trouver les meilleures combinaisons, en effet, certains prédicteurs ont plus de sens pour prédire la réponse que d'autres en connaissance du contexte. 
+	Pour obtenir de meilleurs résultats que la régression linéaire, on a ensuite essayé d'associer plusieurs prédicteurs pour encore réduire l'erreur de prédiction. Pour ce faire, on a commencé par choisir 2 prédicteurs ayant une \emph{p-valeur} inférieure à $0,05$ et on a calculé la régression multiple de $y$ en fonction de ces 2 valeurs. Encore une fois, R nous permet de voir les \emph{p-valeurs} de chaque prédicteur dans la régression linéaire multiple. On a ainsi essayé d'associer 2,3,4,... prédicteurs en essayant d'obtenir une régression linéaire multiple avec des \emph{p-valeur} inférieures à $0,05$. Si la \emph{p-valeur} d'un prédicteur était supérieure à $0,05$ dans la régression, celui-ci était enlevé et remplacé ou non par un autre. On a aussi utilisé notre sens logique et notre intuition pour trouver les meilleures combinaisons. En effet, certains prédicteurs ont plus de sens pour prédire la réponse que d'autres en connaissance du contexte. 
 	On a ainsi pu dégager les meilleures combinaisons de prédicteurs en régression linéaire: 
 	\begin{center}
   	 	\begin{tabular}{| p{10cm} | c | }
@@ -95,7 +95,7 @@
   	\end{center}
   	Les 2 dernières combinaisons sont celles qui minimisent l'erreur trouvée par la cross-validation. Ce sont donc les meilleures combinaisons trouvées de régression linéaire.
 	\subsection{Régression non-linéaire}
-	Pour encore améliorer les résultats, on a essayé d'appliquer la regression non-linéaire. La plupart des prédicteurs utilisés sont des variables "dummy" (0 ou 1) il est donc inutile d'essayer de mettre un exposant sur ces termes dans la regression, en effet $1^n=1$ et $0^n=0$. Cependant certains prédicteurs comme l'âge, ne sont pas des variables "dummy". On a donc fait plusieurs essais pour voir si il y avait un lien quadratique entre certains prédicteurs et y. On a ainsi trouvé de meilleures combinaisons de prédicteurs en utilisant la régression non-linéaire: 
+	Pour davantage améliorer les résultats, on a essayé d'appliquer la régression non-linéaire. La plupart des prédicteurs utilisés sont des variables \emph{dummy}. Il est donc inutile d'essayer de mettre un exposant sur ces termes dans la regression. En effet $1^n=1$ et $0^n=0$. Cependant, certains prédicteurs comme l'âge, ne sont pas des variables \emph{dummy}. On a donc fait plusieurs essais pour voir s'il y avait un lien quadratique entre certains prédicteurs et $y$. On a ainsi trouvé de meilleures combinaisons de prédicteurs en utilisant la régression non-linéaire: 
 	\begin{center}
   	 	\begin{tabular}{| p{10cm} | c |}
   	 	\hline
@@ -127,14 +127,14 @@
 			\includegraphics[width=1\linewidth,height=5cm]{../age+age2+age3+age4+age5.png}
 		\end{subfigure}
 	\end{figure}
-  	On a remarqué que l'âge était une variable qui donnait de meilleurs résultats dans une régression non linéaire en particulier avec un degré de 2 et de 5. Plusieurs essais ont été fait pour trouver d'autres prédicteurs qui avaient un lien quadratique avec y mais sans succès. On remarque que la dernière combinaison a l'air d'être meilleur que les autres sur base de la cross-validation mais nous verrons dans la section "résultats" qu'en pratique ce n'est pas le cas.
+  	On a remarqué que l'âge était une variable qui donnait de meilleurs résultats dans une régression non-linéaire, en particulier avec un degré de 2 et de 5. Plusieurs essais ont été faits pour trouver d'autres prédicteurs qui avaient un lien quadratique avec $y$, mais sans succès. On remarque que la dernière combinaison semble être meilleure que les autres sur base de la \emph{cross-validation}, mais nous verrons dans la section "résultats" qu'en pratique, ce n'est pas le cas.
 	\newpage
 	\section{Résultats et discussions}
-	Au cours de la compétition, plusieurs essais ont été remis par notre, groupe, voici les principaux:
+	Au cours de la compétition, plusieurs essais ont été remis par notre groupe, voici les principaux:
 	\begin{center}
   	 	\begin{tabular}{| p{10cm} | c | }
   	 	\hline
-  	 	Prédicteurs & Résultat \\
+  	 	Prédicteurs & Résultats \\
 		\hline
 		$married+student+contact$ & 0.65189 \\
 		\hline
@@ -150,10 +150,10 @@
 		\hline
   	 	\end{tabular}
   	\end{center}
-  	On remarque que les meilleures combinaisons trouvées avec la regression non linéaire sont celles qui donnent le meilleur score. La fonction de cross-validation est donc un bon outil pour évaluer l'efficacité d'une prédiction. Cependant, on voit que le prédicteur "mois" avait l'air efficace dans la combinaison des prédicteurs, mais en pratique, cette variable ne donne pas de si bons résultats, celle-ci ne fait pas partie de la meilleure combinaison.  
+  	On remarque que les meilleures combinaisons trouvées avec la régression non-linéaire sont celles qui donnent le meilleur score. La fonction de \emph{cross-validation} est donc un bon outil pour évaluer l'efficacité d'une prédiction. Cependant, on voit que le prédicteur "mois" semblait efficace dans la combinaison des prédicteurs. Mais en pratique, cette variable ne donne pas de si bons résultats. Celle-ci ne fait pas partie de la meilleure combinaison.  
   	
 	\section{Conclusion}
-	En conclusion, ce projet a été instructif, il nous a permis d'appliquer la théorie vue au cours dans le cadre d'une compétition. Au final, nous avons trouvé, grâce à la regression non-linéaire, une combinaison permettant de prédire la probabilité qu'un client dépose de l'argent à long terme dans la banque avec une erreur de prédiction de 0,54196(LogLoss).
+	En conclusion, ce projet a été instructif. Il nous a permis d'appliquer la théorie vue au cours dans le cadre d'une compétition. Au final, nous avons trouvé, grâce à la régression non-linéaire, une combinaison permettant de prédire la probabilité qu'un client dépose de l'argent à long terme dans la banque avec une erreur de prédiction de 0,54196(LogLoss).
 	
 	
 	
